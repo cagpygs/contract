@@ -1,11 +1,9 @@
-
-import psycopg2
-
 def get_connection():
     return psycopg2.connect(
-        host="localhost",
-        database="Irrigation",
-        user="postgres",
-        password="123456",
-        port="5432"
+        host=os.environ.get("DB_HOST"),
+        database=os.environ.get("DB_NAME"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        port=os.environ.get("DB_PORT"),
+        sslmode="require"
     )
