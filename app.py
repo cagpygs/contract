@@ -136,16 +136,13 @@ if not is_admin:
         for m in modules.keys()
     }
 
-    selected_module = st.sidebar.radio(
-        "📂 Select Module",
-        list(module_display_map.values())
-    )
+    selected_module = st.selectbox(
+    "Select Module",
+    options=list(module_display_map.keys()),
+    format_func=lambda x: module_display_map[x]
+)
 
-    # Reverse lookup
-    module_name = [
-        k for k, v in module_display_map.items()
-        if v == selected_module
-    ][0]
+module_name = selected_module
 
     tables = sorted(modules[module_name])
     prefix = module_name + "_"
