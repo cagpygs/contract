@@ -1,6 +1,6 @@
 from db import get_connection
 
-def check_login(username, password):
+def login(username, password):
     conn = get_connection()
     cur = conn.cursor()
 
