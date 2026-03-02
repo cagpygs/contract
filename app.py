@@ -136,15 +136,14 @@ if not is_admin:
         for m in modules.keys()
     }
 
-    selected_module = st.selectbox(
+   selected_module = st.selectbox(
     "Select Module",
     options=list(module_display_map.keys()),
     format_func=lambda x: module_display_map[x]
 )
 
 module_name = selected_module
-
-    tables = sorted(modules[module_name])
+tables = sorted(modules[module_name])
     prefix = module_name + "_"
 
     if st.session_state.master_id:
