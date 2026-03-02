@@ -1,28 +1,16 @@
+from db import get_connection
 
-import streamlit as st
-
-from crud import get_connection
-
-
-def login(username, password):
-
-    if not username or not password:
-        return None
-
+def check_login(username, password):
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
         SELECT id, username, role
         FROM users
-        WHERE username = %s
-        AND password = %s
-        AND (is_draft IS FALSE OR is_draft IS NULL)
+        WHERE username=%s AND password=%s
     """, (username, password))
 
     row = cur.fetchone()
-
-    cur.close()
     conn.close()
 
     if row:
@@ -31,6 +19,4 @@ def login(username, password):
             "username": row[1],
             "role": row[2]
         }
-
     return None
-
