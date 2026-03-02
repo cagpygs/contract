@@ -1,3 +1,4 @@
+import psycopg2
 import streamlit as st
 import datetime
 import plotly.express as px
