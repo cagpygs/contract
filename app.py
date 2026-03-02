@@ -66,25 +66,24 @@ line-height: 14px;
 
 # ================= SESSION =================
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+st.session_state.logged_in = False
 
 # ================= LOGIN =================
 if not st.session_state.logged_in:
-
 st.title("Login")
 u = st.text_input("Username")
 p = st.text_input("Password", type="password")
 
 if st.button("Login"):
-    user = login(u, p)
-    if user:
-        st.session_state.logged_in = True
-        st.session_state.user_id = user["id"]
-        st.session_state.username = user["username"]
-        st.session_state.role = user["role"]
-        st.rerun()
-    else:
-        st.error("Invalid login")
+user = login(u, p)
+if user:
+st.session_state.logged_in = True
+st.session_state.user_id = user["id"]
+st.session_state.username = user["username"]
+st.session_state.role = user["role"]
+st.rerun()
+else:
+st.error("Invalid login")
 
 st.stop()
 
@@ -106,8 +105,8 @@ st.markdown(f"👤 **{st.session_state.username}**")
 
 with col3:
 if st.button("Logout"):
-    st.session_state.clear()
-    st.rerun()
+st.session_state.clear()
+st.rerun()
 
 # =====================================================
 # ================= USER SIDE =================
@@ -126,14 +125,14 @@ all_tables = get_all_tables()
 modules = {}
 
 for table in all_tables:
-    if "_" in table:
-        module_prefix = "_".join(table.split("_")[:2])  # contract_management
-        modules.setdefault(module_prefix, []).append(table)
+if "_" in table:
+module_prefix = "_".join(table.split("_")[:2])  # contract_management
+modules.setdefault(module_prefix, []).append(table)
 
 # Sidebar module selection
 module_display_map = {
-    m: m.replace("_", " ").title()
-    for m in modules.keys()
+m: m.replace("_", " ").title()
+for m in modules.keys()
 }
 
 selected_module = st.selectbox(
@@ -147,9 +146,9 @@ tables = sorted(modules[module_name])
 prefix = module_name + "_"
 
 if st.session_state.master_id:
-    can_edit = can_user_edit(st.session_state.master_id)
+can_edit = can_user_edit(st.session_state.master_id)
 else:
-    can_edit = True  # No submission yet → allow editing
+can_edit = True  # No submission yet → allow editing
 
 st.title(f"📊 {selected_module}")
 st.markdown("---")
@@ -162,38 +161,38 @@ percentage, completed, total = get_user_progress(user_id, tables)
 
 # Decide color based on completion %
 if percentage < 40:
-    color = "#ef4444"  # Red
+color = "#ef4444"  # Red
 elif percentage < 75:
-    color = "#f59e0b"  # Orange
+color = "#f59e0b"  # Orange
 else:
-    color = "#10b981"  # Green
+color = "#10b981"  # Green
 
 st.markdown(f"""
 <div class="custom-progress">
-    <div class="custom-progress-fill" 
-         style="width: {percentage}%; background-color: {color};">
-        {percentage:.0f}%
-    </div>
+<div class="custom-progress-fill" 
+style="width: {percentage}%; background-color: {color};">
+{percentage:.0f}%
+</div>
 </div>
 """, unsafe_allow_html=True)
 
 if percentage == 100:
-    st.markdown("""
-    <div style="
-        margin-top:15px;
-        padding:15px;
-        border-radius:10px;
-        background-color:#ecfdf5;
-        border:1px solid #10b981;
-        color:#065f46;
-        font-weight:600;
-        text-align:center;
-        font-size:16px;
-    ">
-        🎉 All Sections Complete ✅<br>
-        You can now submit your application.
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div style="
+margin-top:15px;
+padding:15px;
+border-radius:10px;
+background-color:#ecfdf5;
+border:1px solid #10b981;
+color:#065f46;
+font-weight:600;
+text-align:center;
+font-size:16px;
+">
+🎉 All Sections Complete ✅<br>
+You can now submit your application.
+</div>
+""", unsafe_allow_html=True)
 
 
 
@@ -206,67 +205,67 @@ tab_labels = []
 
 for table in tables:
 
-    section_name = table.replace(prefix, "").replace("_", " ").title()
+section_name = table.replace(prefix, "").replace("_", " ").title()
 
-    # Check completion using your progress logic
-    is_complete = is_section_complete(user_id, table)
+# Check completion using your progress logic
+is_complete = is_section_complete(user_id, table)
 
-    if is_complete:
-        label = f"🟢 {section_name}"
-    else:
-        label = f"⚪ {section_name}"
+if is_complete:
+label = f"🟢 {section_name}"
+else:
+label = f"⚪ {section_name}"
 
-    tab_labels.append(label)
+tab_labels.append(label)
 
 tabs = st.tabs(tab_labels)
 
 for i, table in enumerate(tables):
 
-    with tabs[i]:
+with tabs[i]:
 
-        columns = get_table_columns(table, is_admin=False)
+columns = get_table_columns(table, is_admin=False)
 
-        restore_draft_to_session(table, columns, user_id)
+restore_draft_to_session(table, columns, user_id)
 
-        form_data = {}
-        filled_fields = 0
+form_data = {}
+filled_fields = 0
 
-        col1, col2 = st.columns(2)
+col1, col2 = st.columns(2)
 
-        for index, col_info in enumerate(columns):
+for index, col_info in enumerate(columns):
 
-            col = col_info["column_name"]
-            dtype = col_info["data_type"]
-            key = f"{table}_{col}"
+col = col_info["column_name"]
+dtype = col_info["data_type"]
+key = f"{table}_{col}"
 
-            target_col = col1 if index % 2 == 0 else col2
+target_col = col1 if index % 2 == 0 else col2
 
-            with target_col:
+with target_col:
 
-                if dtype in ("integer", "bigint", "smallint"):
-                    value = st.number_input(col, step=1, key=key)
-                elif dtype in ("numeric", "double precision", "real"):
-                    value = st.number_input(col, key=key)
-                elif dtype == "date":
-                    value = st.date_input(col, key=key)
-                else:
-                    value = st.text_input(col, key=key)
+if dtype in ("integer", "bigint", "smallint"):
+value = st.number_input(col, step=1, key=key)
+elif dtype in ("numeric", "double precision", "real"):
+value = st.number_input(col, key=key)
+elif dtype == "date":
+value = st.date_input(col, key=key)
+else:
+value = st.text_input(col, key=key)
 
-            form_data[col] = value
+form_data[col] = value
 
-            if value not in ("", None):
-                filled_fields += 1
+if value not in ("", None):
+filled_fields += 1
 
-        if st.button("💾 Save Section", key=f"save_{table}"):
+if st.button("💾 Save Section", key=f"save_{table}"):
 
-            if not can_edit:
-                st.warning("You cannot edit unless rejected.")
-            elif filled_fields == 0:
-                st.warning("Section is empty.")
-            else:
-                save_draft_record(table, form_data, user_id)
-                st.success("Section saved.")
-                st.rerun()
+if not can_edit:
+st.warning("You cannot edit unless rejected.")
+elif filled_fields == 0:
+st.warning("Section is empty.")
+else:
+save_draft_record(table, form_data, user_id)
+st.success("Section saved.")
+st.rerun()
 
 # ---------- FINAL SUBMIT ----------
 st.markdown("---")
@@ -275,19 +274,19 @@ st.markdown("---")
 
 if st.button("🚀 Submit Complete Application"):
 
-    incomplete_sections = get_incomplete_forms(user_id, tables)
+incomplete_sections = get_incomplete_forms(user_id, tables)
 
-    if incomplete_sections:
-        st.error("The following sections are not completed:")
+if incomplete_sections:
+st.error("The following sections are not completed:")
 
-        for sec in incomplete_sections:
-            clean_name = sec.replace(prefix, "").replace("_", " ").title()
-            st.write(f"• {clean_name}")
+for sec in incomplete_sections:
+clean_name = sec.replace(prefix, "").replace("_", " ").title()
+st.write(f"• {clean_name}")
 
-    else:
-        create_master_submission(user_id, module_name, tables)
-        st.success("Application submitted successfully.")
-        st.rerun()
+else:
+create_master_submission(user_id, module_name, tables)
+st.success("Application submitted successfully.")
+st.rerun()
 
 # ---------- USER SUBMISSIONS ----------
 st.markdown("---")
@@ -296,28 +295,28 @@ st.subheader("Your Submitted Applications")
 submissions = get_user_master_submissions(user_id, module_name)
 
 if submissions:
-    for sub in submissions:
-        module_label = (
-            "Contract Management"
-            if sub["module"] == "contract_management"
-            else "Canal Performance"
-        )
+for sub in submissions:
+module_label = (
+"Contract Management"
+if sub["module"] == "contract_management"
+else "Canal Performance"
+)
 
-        status = sub["status"]
+status = sub["status"]
 
-        if status == "APPROVED":
-            badge = "🟢 APPROVED"
-        elif status == "REJECTED":
-            badge = "🔴 REJECTED"
-        else:
-            badge = "🟡 PENDING"
-
-        with st.expander(f"{module_label} - {badge}"):
-            full_data = get_full_submission_data(sub["id"])
-            for section_name, df_section in full_data.items():
-                st.dataframe(df_section, use_container_width=True)
+if status == "APPROVED":
+badge = "🟢 APPROVED"
+elif status == "REJECTED":
+badge = "🔴 REJECTED"
 else:
-    st.info("No submissions yet.")
+badge = "🟡 PENDING"
+
+with st.expander(f"{module_label} - {badge}"):
+full_data = get_full_submission_data(sub["id"])
+for section_name, df_section in full_data.items():
+st.dataframe(df_section, use_container_width=True)
+else:
+st.info("No submissions yet.")
 
 # =====================================================
 # ================= ADMIN SIDE ========================
@@ -343,37 +342,37 @@ c3.metric("Pending", pending)
 submissions = get_user_master_submissions_admin(selected_user_id)
 
 if submissions:
-    for sub in submissions:
-        module_name = sub.get("module")
+for sub in submissions:
+module_name = sub.get("module")
 
-        if module_name:
-            module_label = (sub.get("module") or "Unknown").replace("_", " ").title()
-        else:
-            module_label = "Unknown Module"
-
-        status = sub["status"]
-
-        if status == "APPROVED":
-            badge = "🟢 APPROVED"
-        elif status == "REJECTED":
-            badge = "🔴 REJECTED"
-        else:
-            badge = "🟡 PENDING"
-
-        with st.expander(f"{module_label} - {badge}"):
-            full_data = get_full_submission_data(sub["id"])
-            for section_name, df_section in full_data.items():
-                st.dataframe(df_section, use_container_width=True)
-
-            colA, colB = st.columns(2)
-
-            if colA.button("Approve", key=f"a{sub['id']}"):
-                approve_master_submission(sub["id"])
-                st.rerun()
-
-            reason = colB.text_input("Reason", key=f"r{sub['id']}")
-            if colB.button("Reject", key=f"rej{sub['id']}"):
-                reject_master_submission(sub["id"], reason)
-                st.rerun()
+if module_name:
+module_label = (sub.get("module") or "Unknown").replace("_", " ").title()
 else:
-    st.info("No submissions found.")
+module_label = "Unknown Module"
+
+status = sub["status"]
+
+if status == "APPROVED":
+badge = "🟢 APPROVED"
+elif status == "REJECTED":
+badge = "🔴 REJECTED"
+else:
+badge = "🟡 PENDING"
+
+with st.expander(f"{module_label} - {badge}"):
+full_data = get_full_submission_data(sub["id"])
+for section_name, df_section in full_data.items():
+st.dataframe(df_section, use_container_width=True)
+
+colA, colB = st.columns(2)
+
+if colA.button("Approve", key=f"a{sub['id']}"):
+approve_master_submission(sub["id"])
+st.rerun()
+
+reason = colB.text_input("Reason", key=f"r{sub['id']}")
+if colB.button("Reject", key=f"rej{sub['id']}"):
+reject_master_submission(sub["id"], reason)
+st.rerun()
+else:
+st.info("No submissions found.")
