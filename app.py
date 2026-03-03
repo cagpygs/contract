@@ -272,15 +272,18 @@ if not is_admin:
 
     for i, table in enumerate(tables):
 
-        with tabs[i]:
+        for i, table in enumerate(tables):
 
-            is_master_form = (table == first_table)
+    with tabs[i]:
+
+        is_master_form = (table == first_table)
+
         with st.spinner("Loading section..."):
             columns = get_table_columns(table, is_admin=False)
             restore_draft_to_session(table, columns, user_id)
 
-            form_data = {}
-            filled_fields = 0
+        form_data = {}
+        filled_fields = 0
 
             # 🔥 USE FORM ONLY FOR ADMIN FINANCIAL SANCTION
             if table == first_table:
