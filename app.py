@@ -6,6 +6,48 @@ from crud import *
 
 st.set_page_config(layout="wide")
 
+
+st.markdown("""
+<style>
+.timeline {
+    border-left: 3px solid #2563eb;
+    margin-left: 15px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -27px;
+    top: 5px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.submitted::before { background-color: #3b82f6; }
+.approved::before { background-color: #10b981; }
+.rejected::before { background-color: #ef4444; }
+.pending::before  { background-color: #f59e0b; }
+
+.timeline-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.timeline-time {
+    font-size: 12px;
+    color: #6b7280;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 
@@ -96,7 +138,7 @@ is_admin = st.session_state.role == "admin"
 col1, col2, col3 = st.columns([7, 2, 1])
 
 with col1:
-    st.markdown("## 🏗️ Contract Management Dashboard")
+    st.markdown("## 🏗️ Canal Management Dashboard")
     st.caption("Application Submission System")
 
 with col2:
@@ -222,53 +264,140 @@ if not is_admin:
 
     tabs = st.tabs(tab_labels)
 
+    # 🔥 Read estimate fields from first tab draft (DB-based, persistent)
+    first_table = tables[0]
+    first_table_draft = get_user_draft(first_table, user_id)
+
+    first_table = tables[0]
+
     for i, table in enumerate(tables):
 
         with tabs[i]:
 
-            columns = get_table_columns(table, is_admin=False)
+            is_master_form = (table == first_table)
 
+            columns = get_table_columns(table, is_admin=False)
             restore_draft_to_session(table, columns, user_id)
 
             form_data = {}
             filled_fields = 0
 
-            col1, col2 = st.columns(2)
+            # 🔥 USE FORM ONLY FOR ADMIN FINANCIAL SANCTION
+            if table == first_table:
 
-            for index, col_info in enumerate(columns):
+                with st.form(f"form_{table}"):
 
-                col = col_info["column_name"]
-                dtype = col_info["data_type"]
-                key = f"{table}_{col}"
+                    col1, col2 = st.columns(2)
 
-                target_col = col1 if index % 2 == 0 else col2
+                    for index, col_info in enumerate(columns):
 
-                with target_col:
+                        col = col_info["column_name"]
+                        dtype = col_info["data_type"]
+                        key = f"{table}_{col}"
 
-                    if dtype in ("integer", "bigint", "smallint"):
-                        value = st.number_input(col, step=1, key=key)
-                    elif dtype in ("numeric", "double precision", "real"):
-                        value = st.number_input(col, key=key)
-                    elif dtype == "date":
-                        value = st.date_input(col, key=key)
-                    else:
-                        value = st.text_input(col, key=key)
+                        target_col = col1 if index % 2 == 0 else col2
 
-                form_data[col] = value
+                        with target_col:
 
-                if value not in ("", None):
-                    filled_fields += 1
+                            if dtype in ("integer", "bigint", "smallint"):
+                                value = st.number_input(col, step=1, key=key)
+                            elif dtype in ("numeric", "double precision", "real"):
+                                value = st.number_input(col, key=key)
+                            elif dtype == "date":
+                                value = st.date_input(col, key=key)
+                            else:
+                                value = st.text_input(col, key=key)
 
-            if st.button("💾 Save Section", key=f"save_{table}"):
+                        form_data[col] = value
 
-                if not can_edit:
-                    st.warning("You cannot edit unless rejected.")
-                elif filled_fields == 0:
-                    st.warning("Section is empty.")
-                else:
+                    submitted = st.form_submit_button("💾 Save Section")
+
+                # 🔥 VALIDATION OUTSIDE FORM
+                if submitted:
+
+                    estimate_number = form_data.get("estimate_number")
+                    year_of_estimate = form_data.get("year_of_estimate")
+
+                    if not estimate_number:
+                        st.error("Estimate Number is mandatory")
+                        st.stop()
+
+                    if not year_of_estimate:
+                        st.error("Year of Estimate is mandatory")
+                        st.stop()
+
                     save_draft_record(table, form_data, user_id)
-                    st.success("Section saved.")
+                    st.success("Admin Financial Sanction saved successfully ✅")
                     st.rerun()
+
+            else:
+                # 🔹 OTHER SECTIONS (keep old logic)
+
+                col1, col2 = st.columns(2)
+
+                for index, col_info in enumerate(columns):
+
+                    col = col_info["column_name"]
+                    dtype = col_info["data_type"]
+                    key = f"{table}_{col}"
+
+                    target_col = col1 if index % 2 == 0 else col2
+
+                    with target_col:
+
+                        # 🔥 Auto-fill estimate fields from first tab
+                        if table != first_table and col in ["estimate_number", "year_of_estimate"]:
+
+                            value = None
+
+                            if first_table_draft:
+                                value = first_table_draft.get(col)
+
+                            if value is not None:
+                                st.session_state[key] = value
+
+                            # 🔥 Render based on datatype
+                            if dtype in ("integer", "bigint", "smallint"):
+                                st.number_input(col, step=1, disabled=True, key=key)
+
+                            elif dtype in ("numeric", "double precision", "real"):
+                                st.number_input(col, disabled=True, key=key)
+
+                            elif dtype == "date":
+                                st.date_input(col, disabled=True, key=key)
+
+                            else:
+                                st.text_input(col, disabled=True, key=key)
+
+                            form_data[col] = value
+                            continue
+
+
+
+                        if dtype in ("integer", "bigint", "smallint"):
+                            value = st.number_input(col, step=1, key=key)
+                        elif dtype in ("numeric", "double precision", "real"):
+                            value = st.number_input(col, key=key)
+                        elif dtype == "date":
+                            value = st.date_input(col, key=key)
+                        else:
+                            value = st.text_input(col, key=key)
+
+                    form_data[col] = value
+
+                    if value not in ("", None):
+                        filled_fields += 1
+
+                if st.button("💾 Save Section", key=f"save_{table}"):
+
+                    if not can_edit:
+                        st.warning("You cannot edit unless rejected.")
+                    elif filled_fields == 0:
+                        st.warning("Section is empty.")
+                    else:
+                        save_draft_record(table, form_data, user_id)
+                        st.success("Section saved.")
+                        st.rerun()
 
     # ---------- FINAL SUBMIT ----------
     st.markdown("---")
@@ -317,7 +446,12 @@ if not is_admin:
             with st.expander(f"{module_label} - {badge}"):
                 full_data = get_full_submission_data(sub["id"])
                 for section_name, df_section in full_data.items():
+                    # 🔥 Format table name nicely like tabs
+                    clean_name = section_name.replace(module_name + "_", "").replace("_", " ").title()
+
+                    st.markdown(f"### 📄 {clean_name}")
                     st.dataframe(df_section, use_container_width=True)
+
     else:
         st.info("No submissions yet.")
 
@@ -337,10 +471,14 @@ if is_admin:
 
     approved, rejected, pending = get_user_master_status_counts(selected_user_id)
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Approved", approved)
-    c2.metric("Rejected", rejected)
-    c3.metric("Pending", pending)
+    total = approved + rejected + pending
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("📦 Total", total)
+    col2.metric("🟢 Approved", approved)
+    col3.metric("🔴 Rejected", rejected)
+    col4.metric("🟡 Pending", pending)
 
     submissions = get_user_master_submissions_admin(selected_user_id)
 
@@ -362,20 +500,76 @@ if is_admin:
             else:
                 badge = "🟡 PENDING"
 
-            with st.expander(f"{module_label} - {badge}"):
+
+            # this is for Time Line
+            st.markdown("### 🕒 Timeline")
+
+            # Draft Created (we assume created_at exists in master_submission)
+            created_at = sub.get("created_at")
+
+            if created_at:
+                st.markdown(f"📝 **Submitted:** {created_at}")
+
+            # Status-based timeline
+            if sub["status"] == "APPROVED":
+                approved_at = sub.get("approved_at")
+                if approved_at:
+                    st.markdown(f"🟢 **Approved:** {approved_at}")
+
+            elif sub["status"] == "REJECTED":
+                rejected_at = sub.get("rejected_at")
+                reason = sub.get("rejection_reason")
+
+                if rejected_at:
+                    st.markdown(f"🔴 **Rejected:** {rejected_at}")
+
+                if reason:
+                    st.markdown(f"💬 **Reason:** {reason}")
+
+            else:
+                st.markdown("🟡 **Pending Review**")
+
+            st.markdown("---")
+
+            # this is for Time Line ENDS
+
+            with st.expander(
+                    f"📄 {module_label} - Form | {badge}",
+                    expanded=False
+            ):
                 full_data = get_full_submission_data(sub["id"])
                 for section_name, df_section in full_data.items():
+                    # 🔥 Format table name nicely like tabs
+                    clean_name = section_name.replace(module_name + "_", "").replace("_", " ").title()
+
+                    st.markdown(f"### 📄 {clean_name}")
                     st.dataframe(df_section, use_container_width=True)
 
-                colA, colB = st.columns(2)
+                st.markdown("---")
+                st.markdown("### ⚖ Review Decision")
+                colA, colB, colC = st.columns([1, 2, 1])
 
-                if colA.button("Approve", key=f"a{sub['id']}"):
+
+
+                if colA.button("✅ Approve", key=f"a{sub['id']}"):
                     approve_master_submission(sub["id"])
                     st.rerun()
 
-                reason = colB.text_input("Reason", key=f"r{sub['id']}")
-                if colB.button("Reject", key=f"rej{sub['id']}"):
+                reason = colB.text_input("Rejection Reason", key=f"r{sub['id']}")
+                if colB.button("❌ Reject", key=f"rej{sub['id']}"):
                     reject_master_submission(sub["id"], reason)
                     st.rerun()
+
+                    # 🔥 PDF HERE
+                pdf = export_master_submission_pdf(sub["id"])
+
+                st.download_button(
+                        "Download Full Application PDF",
+                        pdf,
+                        file_name=f"{selected_user}_cycle_{sub['cycle']}.pdf",
+                        mime="application/pdf",
+                        key=f"pdf_{sub['id']}"
+                    )
+
     else:
         st.info("No submissions found.")
