@@ -89,8 +89,8 @@ if selected_module not in modules:
     st.error("Invalid module selection.")
     st.stop()
 
-module_name = selected_module
-tables = sorted(modules[module_name])
+    module_name = selected_module
+    tables = sorted(modules[module_name])
     prefix = module_name + "_"
 
     st.title(f"📊 {module_display_map[module_name]}")
