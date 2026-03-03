@@ -283,56 +283,10 @@ if not is_admin:
         form_data = {}
         filled_fields = 0
 
-            # 🔥 USE FORM ONLY FOR ADMIN FINANCIAL SANCTION
-            if table == first_table:
+        # 🔥 USE FORM ONLY FOR ADMIN FINANCIAL SANCTION
+        if table == first_table:
 
-                with st.form(f"form_{table}"):
-
-                    col1, col2 = st.columns(2)
-
-                    for index, col_info in enumerate(columns):
-
-                        col = col_info["column_name"]
-                        dtype = col_info["data_type"]
-                        key = f"{table}_{col}"
-
-                        target_col = col1 if index % 2 == 0 else col2
-
-                        with target_col:
-
-                            if dtype in ("integer", "bigint", "smallint"):
-                                value = st.number_input(col, step=1, key=key)
-                            elif dtype in ("numeric", "double precision", "real"):
-                                value = st.number_input(col, key=key)
-                            elif dtype == "date":
-                                value = st.date_input(col, key=key)
-                            else:
-                                value = st.text_input(col, key=key)
-
-                        form_data[col] = value
-
-                    submitted = st.form_submit_button("💾 Save Section")
-
-                # 🔥 VALIDATION OUTSIDE FORM
-                if submitted:
-
-                    estimate_number = form_data.get("estimate_number")
-                    year_of_estimate = form_data.get("year_of_estimate")
-
-                    if not estimate_number:
-                        st.error("Estimate Number is mandatory")
-                        st.stop()
-
-                    if not year_of_estimate:
-                        st.error("Year of Estimate is mandatory")
-                        st.stop()
-
-                    save_draft_record(table, form_data, user_id)
-                    st.success("Admin Financial Sanction saved successfully ✅")
-                    st.rerun()
-
-            else:
-                # 🔹 OTHER SECTIONS (keep old logic)
+            with st.form(f"form_{table}"):
 
                 col1, col2 = st.columns(2)
 
@@ -346,35 +300,6 @@ if not is_admin:
 
                     with target_col:
 
-                        # 🔥 Auto-fill estimate fields from first tab
-                        if table != first_table and col in ["estimate_number", "year_of_estimate"]:
-
-                            value = None
-
-                            if first_table_draft:
-                                value = first_table_draft.get(col)
-
-                            if value is not None:
-                                st.session_state[key] = value
-
-                            # 🔥 Render based on datatype
-                            if dtype in ("integer", "bigint", "smallint"):
-                                st.number_input(col, step=1, disabled=True, key=key)
-
-                            elif dtype in ("numeric", "double precision", "real"):
-                                st.number_input(col, disabled=True, key=key)
-
-                            elif dtype == "date":
-                                st.date_input(col, disabled=True, key=key)
-
-                            else:
-                                st.text_input(col, disabled=True, key=key)
-
-                            form_data[col] = value
-                            continue
-
-
-
                         if dtype in ("integer", "bigint", "smallint"):
                             value = st.number_input(col, step=1, key=key)
                         elif dtype in ("numeric", "double precision", "real"):
@@ -386,40 +311,24 @@ if not is_admin:
 
                     form_data[col] = value
 
-                    if value not in ("", None):
-                        filled_fields += 1
+                submitted = st.form_submit_button("💾 Save Section")
 
-                if st.button("💾 Save Section", key=f"save_{table}"):
+            if submitted:
 
-                    if not can_edit:
-                        st.warning("You cannot edit unless rejected.")
-                    elif filled_fields == 0:
-                        st.warning("Section is empty.")
-                    else:
-                        save_draft_record(table, form_data, user_id)
-                        st.success("Section saved.")
-                        st.rerun()
+                estimate_number = form_data.get("estimate_number")
+                year_of_estimate = form_data.get("year_of_estimate")
 
-    # ---------- FINAL SUBMIT ----------
-    st.markdown("---")
-    st.subheader("Final Master Submission")
-    st.markdown("---")
+                if not estimate_number:
+                    st.error("Estimate Number is mandatory")
+                    st.stop()
 
-    if st.button("🚀 Submit Complete Application"):
+                if not year_of_estimate:
+                    st.error("Year of Estimate is mandatory")
+                    st.stop()
 
-        incomplete_sections = get_incomplete_forms(user_id, tables)
-
-        if incomplete_sections:
-            st.error("The following sections are not completed:")
-
-            for sec in incomplete_sections:
-                clean_name = sec.replace(prefix, "").replace("_", " ").title()
-                st.write(f"• {clean_name}")
-
-        else:
-            create_master_submission(user_id, module_name, tables)
-            st.success("Application submitted successfully.")
-            st.rerun()
+                save_draft_record(table, form_data, user_id)
+                st.success("Admin Financial Sanction saved successfully ✅")
+                st.rerun()
 
     # ---------- USER SUBMISSIONS ----------
     st.markdown("---")
