@@ -7,18 +7,20 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 import io
+import os
 
 
 # ================= DB CONNECTION =================
+
 def get_connection():
-return psycopg2.connect(
-host=os.environ.get("DB_HOST"),
-database=os.environ.get("DB_NAME"),
-user=os.environ.get("DB_USER"),
-password=os.environ.get("DB_PASSWORD"),
-port=os.environ.get("DB_PORT"),
-sslmode="require"
-)
+    return psycopg2.connect(
+        host=os.environ.get("DB_HOST"),
+        database=os.environ.get("DB_NAME"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        port=os.environ.get("DB_PORT"),
+        sslmode="require"
+    )
 
 
 # ================= LOAD TABLES =================
