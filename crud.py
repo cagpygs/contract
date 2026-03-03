@@ -1,4 +1,3 @@
-import psycopg2
 import pandas as pd
 import streamlit as st
 from psycopg2 import sql
@@ -7,11 +6,11 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 import io
-import os
 
+import os
+import psycopg2
 
 # ================= DB CONNECTION =================
-
 def get_connection():
     return psycopg2.connect(
         host=os.environ.get("DB_HOST"),
