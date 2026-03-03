@@ -276,7 +276,7 @@ if not is_admin:
 
             is_master_form = (table == first_table)
 
-            with st.spinner("Loading section..."):
+        with st.spinner("Loading section..."):
         columns = get_table_columns(table, is_admin=False)
         restore_draft_to_session(table, columns, user_id)
 
