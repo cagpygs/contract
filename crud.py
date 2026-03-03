@@ -11,6 +11,7 @@ import os
 import psycopg2
 
 # ================= DB CONNECTION =================
+@st.cache_resource
 def get_connection():
     return psycopg2.connect(
         host=os.environ.get("DB_HOST"),
@@ -23,6 +24,7 @@ def get_connection():
 
 
 # ================= LOAD TABLES =================
+@st.cache_resource
 def get_all_tables(conn=None):
     close_conn = False
 
