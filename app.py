@@ -272,8 +272,6 @@ if not is_admin:
 
     for i, table in enumerate(tables):
 
-        for i, table in enumerate(tables):
-
     with tabs[i]:
 
         is_master_form = (table == first_table)
