@@ -275,10 +275,9 @@ if not is_admin:
         with tabs[i]:
 
             is_master_form = (table == first_table)
-
-       
         with st.spinner("Loading section..."):
-    columns = get_table_columns(table, is_admin=False)
+            columns = get_table_columns(table, is_admin=False)
+            restore_draft_to_session(table, columns, user_id)
 
             form_data = {}
             filled_fields = 0
