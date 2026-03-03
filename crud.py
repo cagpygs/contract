@@ -1,10 +1,7 @@
 import psycopg2
-import os
 import pandas as pd
 import streamlit as st
 from psycopg2 import sql
-
-
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
@@ -14,16 +11,16 @@ import io
 
 # ================= DB CONNECTION =================
 def get_connection():
-    return psycopg2.connect(
-        host=os.environ.get("DB_HOST"),
-        database=os.environ.get("DB_NAME"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        port=os.environ.get("DB_PORT"),
-        sslmode="require"
-    )
+return psycopg2.connect(
+host=os.environ.get("DB_HOST"),
+database=os.environ.get("DB_NAME"),
+user=os.environ.get("DB_USER"),
+password=os.environ.get("DB_PASSWORD"),
+port=os.environ.get("DB_PORT"),
+sslmode="require"
+)
 
-print("DB HOST:", os.environ.get("DB_HOST"))
+
 # ================= LOAD TABLES =================
 def get_all_tables(conn=None):
     close_conn = False
@@ -424,7 +421,7 @@ def export_master_submission_pdf(master_id):
     # 🔥 Fetch master status and rejection reason
     cur = conn.cursor()
     cur.execute("""
-        SELECT status, rejection_reason
+        SELECT status, rejection_reason, module
         FROM master_submission
         WHERE id=%s
     """, (master_id,))
@@ -567,7 +564,8 @@ def get_table_columns(table, is_admin=False):
         "submission_cycle",
         "created_at",
         "status",
-        "approved_by"
+        "approved_by",
+        "draft_id"
     )
 
     if not is_admin:
@@ -761,3 +759,29 @@ def get_master_status(user_id, module_name):
     if result:
         return result[0]
     return None
+
+
+def get_estimate_details(user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT estimate_number, year_of_estimate
+        FROM contract_management_admin_financial_sanction
+        WHERE user_id=%s
+        LIMIT 1
+    """, (user_id,))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return {
+            "estimate_number": row[0],
+            "year_of_estimate": row[1]
+        }
+
+    return None
+
+
+
