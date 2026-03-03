@@ -23,7 +23,7 @@ def get_connection():
         sslmode="require"
     )
 
-
+print("DB HOST:", os.environ.get("DB_HOST"))
 # ================= LOAD TABLES =================
 def get_all_tables(conn=None):
     close_conn = False
