@@ -7,7 +7,7 @@ def login(username, password):
     cur.execute("""
         SELECT id, username, role
         FROM users
-        WHERE username=%s AND password=%s
+        WHERE username=%s AND password_hash=%s
     """, (username, password))
 
     row = cur.fetchone()
