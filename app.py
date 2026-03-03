@@ -70,6 +70,11 @@ if not is_admin:
             module_prefix = "_".join(table.split("_")[:2])
             modules.setdefault(module_prefix, []).append(table)
 
+    # Safety check
+    if not modules:
+        st.error("No modules found. Check database connection.")
+        st.stop()
+
     module_display_map = {
         m: m.replace("_", " ").title()
         for m in modules.keys()
@@ -81,13 +86,9 @@ if not is_admin:
         format_func=lambda x: module_display_map[x]
     )
 
-    if not modules:
-    st.error("No modules found. Check database connection.")
-    st.stop()
-
-if selected_module not in modules:
-    st.error("Invalid module selection.")
-    st.stop()
+    if selected_module not in modules:
+        st.error("Invalid module selection.")
+        st.stop()
 
     module_name = selected_module
     tables = sorted(modules[module_name])
@@ -116,7 +117,7 @@ if selected_module not in modules:
             form_data = {}
             filled_fields = 0
 
-            col1, col2 = st.columns(2)
+            colA, colB = st.columns(2)
 
             for index, col_info in enumerate(columns):
 
@@ -124,10 +125,9 @@ if selected_module not in modules:
                 dtype = col_info["data_type"]
                 key = f"{table}_{col_name}"
 
-                target_col = col1 if index % 2 == 0 else col2
+                target_col = colA if index % 2 == 0 else colB
 
                 with target_col:
-
                     if dtype in ("integer", "bigint", "smallint"):
                         value = st.number_input(col_name, step=1, key=key)
                     elif dtype in ("numeric", "double precision", "real"):
@@ -151,7 +151,7 @@ if selected_module not in modules:
                     st.success("Section saved.")
                     st.rerun()
 
-    # FINAL SUBMIT
+    # ================= FINAL SUBMIT =================
     st.markdown("---")
     st.subheader("Final Master Submission")
 
@@ -169,7 +169,7 @@ if selected_module not in modules:
             st.success("Application submitted successfully.")
             st.rerun()
 
-    # USER SUBMISSIONS
+    # ================= USER SUBMISSIONS =================
     st.markdown("---")
     st.subheader("Your Submitted Applications")
 
