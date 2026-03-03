@@ -81,6 +81,14 @@ if not is_admin:
         format_func=lambda x: module_display_map[x]
     )
 
+    if not modules:
+    st.error("No modules found. Check database connection.")
+    st.stop()
+
+    if selected_module not in modules:
+    st.error("Invalid module selection.")
+    st.stop()
+
     module_name = selected_module
     tables = sorted(modules[module_name])
     prefix = module_name + "_"
