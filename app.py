@@ -9,11 +9,45 @@ st.set_page_config(layout="wide")
 
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Inter', sans-serif;
+}
+h1, h2, h3 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+}
+/* Background */
+.stApp {
+    background-color:#f8fafc;
+}
+
+/* Container spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* Dashboard header */
+h1, h2, h3 {
+    font-weight:600;
+}
+
+/* Card style */
+.dashboard-card {
+    background:white;
+    padding:20px;
+    border-radius:14px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.06);
+    margin-bottom:20px;
+}
+
+/* Timeline */
 .timeline {
     border-left: 3px solid #2563eb;
     margin-left: 15px;
     padding-left: 20px;
-    position: relative;
 }
 
 .timeline-item {
@@ -31,19 +65,79 @@ st.markdown("""
     border-radius: 50%;
 }
 
-.submitted::before { background-color: #3b82f6; }
-.approved::before { background-color: #10b981; }
-.rejected::before { background-color: #ef4444; }
-.pending::before  { background-color: #f59e0b; }
+/* Timeline colors */
+.submitted::before { background:#3b82f6; }
+.approved::before { background:#10b981; }
+.rejected::before { background:#ef4444; }
+.pending::before { background:#f59e0b; }
 
-.timeline-title {
-    font-weight: 600;
-    font-size: 14px;
+/* Progress bar */
+.custom-progress {
+    background:#e5e7eb;
+    border-radius:10px;
+    height:14px;
+    width:100%;
+    margin-top:10px;
 }
 
-.timeline-time {
-    font-size: 12px;
-    color: #6b7280;
+.custom-progress-fill {
+    height:100%;
+    border-radius:10px;
+    text-align:right;
+    padding-right:8px;
+    font-size:11px;
+    font-weight:600;
+    color:white;
+    line-height:14px;
+}
+
+
+
+/* Tables */
+[data-testid="stDataFrame"] {
+    border-radius:12px;
+    overflow:hidden;
+}
+
+/* Expanders */
+.streamlit-expanderHeader {
+    font-size:16px;
+    font-weight:600;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
+    font-size:20px;
+    font-weight:600;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+    color:#2563eb;
+    border-bottom:3px solid #2563eb;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    font-weight:700;
+}
+.stButton > button {
+    height: 50px;
+    font-size: 28px;
+    font-weight: 800;
+    border-radius: 14px;
+    background: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    letter-spacing: 1px;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Hover animation */
+.stButton > button:hover {
+    transform: translateY(-6px);
+    transition: 0.6s;
+}
+
+/* Card spacing */
+.row-widget.stButton {
+    margin-bottom: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -461,7 +555,12 @@ if not is_admin:
 
 if is_admin:
 
-    st.markdown("---")
+    # UI filter state
+    if "status_filter" not in st.session_state:
+        st.session_state.status_filter = "ALL"
+
+
+
     st.subheader("📋 Admin Panel")
 
     users_df = get_users_with_data()
@@ -472,18 +571,47 @@ if is_admin:
     approved, rejected, pending = get_user_master_status_counts(selected_user_id)
 
     total = approved + rejected + pending
+    column1, column2, column3, column4 = st.columns(4)
 
-    col1, col2, col3, col4 = st.columns(4)
+    with column1:
+        # st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        # st.metric("📦 Total", total)
+        if st.button(f"📦  Total\n\n{total}", use_container_width=True):
+            st.session_state.status_filter = "ALL"
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    col1.metric("📦 Total", total)
-    col2.metric("🟢 Approved", approved)
-    col3.metric("🔴 Rejected", rejected)
-    col4.metric("🟡 Pending", pending)
+    with column2:
+        # st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        # st.metric("🟢 Approved", approved)
+        if st.button(f"🟢  Approved\n\n{approved}", use_container_width=True):
+            st.session_state.status_filter = "APPROVED"
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with column3:
+        # st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        # st.metric("🔴 Rejected", rejected)
+        if st.button(f"🔴  Rejected\n\n{rejected}", use_container_width=True):
+            st.session_state.status_filter = "REJECTED"
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with column4:
+        # st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        # st.metric("🟡 Pending", pending)
+        if st.button(f"🟡  Pending\n\n{pending}", use_container_width=True):
+            st.session_state.status_filter = "PENDING"
+        st.markdown('</div>', unsafe_allow_html=True)
 
     submissions = get_user_master_submissions_admin(selected_user_id)
 
     if submissions:
         for sub in submissions:
+
+            if st.session_state.status_filter != "ALL":
+                if sub["status"] != st.session_state.status_filter:
+                    continue
+
+
             module_name = sub.get("module")
 
             if module_name:
@@ -502,7 +630,7 @@ if is_admin:
 
 
             # this is for Time Line
-            st.markdown("### 🕒 Timeline")
+            st.markdown("### 🕒Form Submission Timeline")
 
             # Draft Created (we assume created_at exists in master_submission)
             created_at = sub.get("created_at")
