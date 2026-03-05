@@ -23,6 +23,7 @@ def get_connection():
 
 
 # ================= LOAD TABLES =================
+@st.cache_data(ttl=300)
 def get_all_tables(conn=None):
     close_conn = False
 
@@ -196,6 +197,7 @@ def create_master_submission(user_id, module, tables):
 
 
 # ================= GET USER MASTER SUBMISSIONS =================
+@st.cache_data(ttl=300)
 def get_user_master_submissions(user_id, module):
 
     conn = get_connection()
@@ -210,7 +212,7 @@ def get_user_master_submissions(user_id, module):
 
     conn.close()
     return df.to_dict("records")
-
+@st.cache_data(ttl=300)
 def get_user_master_submissions_admin(user_id):
 
     conn = get_connection()
@@ -226,6 +228,7 @@ def get_user_master_submissions_admin(user_id):
     return df.to_dict("records")
 
 # ================= GET FULL SUBMISSION DATA =================
+@st.cache_data(ttl=300)
 def get_full_submission_data(master_id):
 
     conn = get_connection()
@@ -601,7 +604,7 @@ def get_user_draft(table, user_id):
     conn.close()
 
     return dict(zip(columns, row))
-
+@st.cache_data(ttl=300)
 def get_users_with_data():
 
     conn = get_connection()
