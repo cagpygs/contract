@@ -4,9 +4,7 @@ import plotly.express as px
 from auth import login
 from crud import *
 
-st.set_page_config(page_title="Contract System", layout="wide")
-
-st.title("Contract Management System")
+ 
 st.set_page_config(layout="wide")
 
 
